@@ -96,151 +96,92 @@
         .copy-btn:hover { background: rgba(255,255,255,0.2); }
         .copy-btn.copied { background: #22c55e; }
         
-        /* Calculator */
-        .calculator {
+        /* Pricing Table */
+        .pricing-table {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
-            padding: 2rem;
+            padding: 1.5rem;
             backdrop-filter: blur(10px);
-            width: 100%;
-            max-width: 400px;
             margin-bottom: 3rem;
+            overflow-x: auto;
         }
         
-        .calc-title {
+        .pricing-title {
             font-size: 0.9rem;
             color: rgba(255,255,255,0.5);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-        }
-        
-        .calc-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .calc-label {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.95rem;
-        }
-        
-        /* Custom Dropdown */
-        .custom-select {
-            position: relative;
-            min-width: 150px;
-        }
-        
-        .select-trigger {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 8px;
-            padding: 0.6rem 1rem;
-            color: white;
-            font-size: 0.9rem;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s;
-        }
-        
-        .select-trigger:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: rgba(255,255,255,0.25);
-        }
-        
-        .select-trigger.active {
-            border-color: #667eea;
-            border-radius: 8px 8px 0 0;
-        }
-        
-        .select-trigger svg {
-            width: 12px;
-            height: 12px;
-            fill: rgba(255,255,255,0.5);
-            transition: transform 0.2s;
-        }
-        
-        .select-trigger.active svg {
-            transform: rotate(180deg);
-        }
-        
-        .select-options {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #1a1a2e;
-            border: 1px solid rgba(255,255,255,0.15);
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            overflow: hidden;
-            display: none;
-            z-index: 100;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .select-options.show {
-            display: block;
-            animation: slideDown 0.2s ease;
-        }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .select-option {
-            padding: 0.6rem 1rem;
-            cursor: pointer;
-            transition: background 0.15s;
-            font-size: 0.9rem;
-        }
-        
-        .select-option:hover {
-            background: rgba(102, 126, 234, 0.3);
-        }
-        
-        .select-option.selected {
-            background: rgba(102, 126, 234, 0.2);
-            color: #a5f3fc;
-        }
-        
-        .calc-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            margin: 1.5rem 0;
-        }
-        
-        .calc-result {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .calc-result-label {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.95rem;
-        }
-        
-        .calc-price {
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #22c55e, #4ade80);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .calc-note {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.4);
-            margin-top: 1rem;
             text-align: center;
+        }
+        
+        .pricing-table table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+        
+        .pricing-table th {
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .pricing-table th:first-child {
+            text-align: left;
+        }
+        
+        .pricing-table th small {
+            display: block;
+            font-weight: 400;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 0.2rem;
+        }
+        
+        .pricing-table td {
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .pricing-table td:first-child {
+            text-align: left;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+        
+        .pricing-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .pricing-table .price {
+            color: #4ade80;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        
+        .pricing-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .pricing-note {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .pricing-note span {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: white;
         }
         
         .features {
@@ -322,67 +263,53 @@
             <button class="copy-btn" id="copyBtn">Copy</button>
         </div>
         
-        <!-- Pricing Calculator -->
-        <div class="calculator">
-            <div class="calc-title">Pricing Calculator</div>
-            
-            <div class="calc-row">
-                <span class="calc-label">File type</span>
-                <div class="custom-select" data-name="fileType" data-value="image">
-                    <div class="select-trigger">
-                        <span>Image</span>
-                        <svg viewBox="0 0 16 16"><path d="M8 11L3 6h10l-5 5z"/></svg>
-                    </div>
-                    <div class="select-options">
-                        <div class="select-option selected" data-value="image">Image</div>
-                        <div class="select-option" data-value="video">Video</div>
-                        <div class="select-option" data-value="audio">Audio</div>
-                        <div class="select-option" data-value="document">Document</div>
-                    </div>
-                </div>
+        <!-- Pricing Table -->
+        <div class="pricing-table">
+            <div class="pricing-title">Simple Pricing</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>TL;DR<small>~100 tokens</small></th>
+                        <th>Summary<small>~500 tokens</small></th>
+                        <th>Detailed<small>~2000 tokens</small></th>
+                        <th>Full<small>~5000 tokens</small></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Image</td>
+                        <td class="price">$0.002</td>
+                        <td class="price">$0.005</td>
+                        <td class="price">$0.01</td>
+                        <td class="price">$0.02</td>
+                    </tr>
+                    <tr>
+                        <td>Video <small>/min</small></td>
+                        <td class="price">$0.01</td>
+                        <td class="price">$0.02</td>
+                        <td class="price">$0.05</td>
+                        <td class="price">$0.10</td>
+                    </tr>
+                    <tr>
+                        <td>Audio <small>/min</small></td>
+                        <td class="price">$0.005</td>
+                        <td class="price">$0.01</td>
+                        <td class="price">$0.02</td>
+                        <td class="price">$0.05</td>
+                    </tr>
+                    <tr>
+                        <td>Document</td>
+                        <td class="price">$0.003</td>
+                        <td class="price">$0.007</td>
+                        <td class="price">$0.015</td>
+                        <td class="price">$0.03</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pricing-note">
+                <span>First 100 requests free</span>
             </div>
-            
-            <div class="calc-row">
-                <span class="calc-label">File size</span>
-                <div class="custom-select" data-name="fileSize" data-value="5">
-                    <div class="select-trigger">
-                        <span>~5 MB</span>
-                        <svg viewBox="0 0 16 16"><path d="M8 11L3 6h10l-5 5z"/></svg>
-                    </div>
-                    <div class="select-options">
-                        <div class="select-option" data-value="1">~1 MB</div>
-                        <div class="select-option selected" data-value="5">~5 MB</div>
-                        <div class="select-option" data-value="10">~10 MB</div>
-                        <div class="select-option" data-value="50">~50 MB</div>
-                        <div class="select-option" data-value="100">~100 MB</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="calc-row">
-                <span class="calc-label">Output tokens</span>
-                <div class="custom-select" data-name="outputTokens" data-value="500">
-                    <div class="select-trigger">
-                        <span>~500 (Summary)</span>
-                        <svg viewBox="0 0 16 16"><path d="M8 11L3 6h10l-5 5z"/></svg>
-                    </div>
-                    <div class="select-options">
-                        <div class="select-option" data-value="100">~100 (TL;DR)</div>
-                        <div class="select-option selected" data-value="500">~500 (Summary)</div>
-                        <div class="select-option" data-value="2000">~2000 (Detailed)</div>
-                        <div class="select-option" data-value="5000">~5000 (Full)</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="calc-divider"></div>
-            
-            <div class="calc-result">
-                <span class="calc-result-label">Estimated cost</span>
-                <span class="calc-price" id="price">$0.008</span>
-            </div>
-            
-            <div class="calc-note">Prices may vary. Video/audio charged per minute.</div>
         </div>
         
         <div class="features">
@@ -413,73 +340,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Custom Select Logic
-        document.querySelectorAll('.custom-select').forEach(select => {
-            const trigger = select.querySelector('.select-trigger');
-            const options = select.querySelector('.select-options');
-            const optionItems = select.querySelectorAll('.select-option');
-            
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                // Close other dropdowns
-                document.querySelectorAll('.custom-select').forEach(s => {
-                    if (s !== select) {
-                        s.querySelector('.select-trigger').classList.remove('active');
-                        s.querySelector('.select-options').classList.remove('show');
-                    }
-                });
-                trigger.classList.toggle('active');
-                options.classList.toggle('show');
-            });
-            
-            optionItems.forEach(option => {
-                option.addEventListener('click', () => {
-                    const value = option.dataset.value;
-                    const text = option.textContent;
-                    
-                    select.dataset.value = value;
-                    trigger.querySelector('span').textContent = text;
-                    
-                    optionItems.forEach(o => o.classList.remove('selected'));
-                    option.classList.add('selected');
-                    
-                    trigger.classList.remove('active');
-                    options.classList.remove('show');
-                    
-                    calculatePrice();
-                });
-            });
-        });
-        
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.custom-select').forEach(select => {
-                select.querySelector('.select-trigger').classList.remove('active');
-                select.querySelector('.select-options').classList.remove('show');
-            });
-        });
-        
-        // Pricing calculation
-        const pricing = {
-            image: { base: 0.002, perMB: 0.001, perToken: 0.000002 },
-            video: { base: 0.01, perMB: 0.002, perToken: 0.000003 },
-            audio: { base: 0.005, perMB: 0.001, perToken: 0.000002 },
-            document: { base: 0.003, perMB: 0.0005, perToken: 0.000001 }
-        };
-        
-        function calculatePrice() {
-            const type = document.querySelector('[data-name="fileType"]').dataset.value;
-            const size = parseInt(document.querySelector('[data-name="fileSize"]').dataset.value);
-            const tokens = parseInt(document.querySelector('[data-name="outputTokens"]').dataset.value);
-            
-            const p = pricing[type];
-            const cost = p.base + (size * p.perMB) + (tokens * p.perToken);
-            
-            document.getElementById('price').textContent = '$' + cost.toFixed(3);
-        }
-        
-        calculatePrice();
-        
         // Three.js Particle Animation
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();

@@ -33,6 +33,7 @@
             justify-content: center;
             min-height: 100vh;
             padding: 2rem;
+            padding-bottom: 6rem;
             text-align: center;
         }
         
@@ -127,30 +128,87 @@
             font-size: 0.95rem;
         }
         
-        .calc-select {
+        /* Custom Dropdown */
+        .custom-select {
+            position: relative;
+            min-width: 150px;
+        }
+        
+        .select-trigger {
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 8px;
-            padding: 0.5rem 1rem;
+            padding: 0.6rem 1rem;
             color: white;
             font-size: 0.9rem;
             cursor: pointer;
-            min-width: 140px;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            padding-right: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
         }
         
-        .calc-select:focus {
-            outline: none;
+        .select-trigger:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.25);
+        }
+        
+        .select-trigger.active {
             border-color: #667eea;
+            border-radius: 8px 8px 0 0;
         }
         
-        .calc-select option {
+        .select-trigger svg {
+            width: 12px;
+            height: 12px;
+            fill: rgba(255,255,255,0.5);
+            transition: transform 0.2s;
+        }
+        
+        .select-trigger.active svg {
+            transform: rotate(180deg);
+        }
+        
+        .select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
             background: #1a1a2e;
-            color: white;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+            display: none;
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .select-options.show {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .select-option {
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.9rem;
+        }
+        
+        .select-option:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+        
+        .select-option.selected {
+            background: rgba(102, 126, 234, 0.2);
+            color: #a5f3fc;
         }
         
         .calc-divider {
@@ -188,35 +246,49 @@
         .features {
             display: flex;
             gap: 2rem;
-            margin-top: 1rem;
             flex-wrap: wrap;
             justify-content: center;
         }
         
         .feature {
-            text-align: center;
-            opacity: 0.7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: #667eea;
+            fill: none;
+            stroke-width: 2;
         }
         
         .feature-text {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: rgba(255,255,255,0.5);
         }
         
         footer {
             position: fixed;
-            bottom: 2rem;
+            bottom: 0;
             left: 0;
             right: 0;
             text-align: center;
+            padding: 1.5rem;
             color: rgba(255,255,255,0.3);
             font-size: 0.85rem;
             z-index: 10;
+            background: linear-gradient(transparent, rgba(10,10,15,0.9));
         }
         
         footer a {
@@ -231,12 +303,10 @@
                 flex-direction: column;
                 padding: 1rem;
             }
-            .command-box code {
-                font-size: 0.75rem;
-            }
-            .calculator {
-                padding: 1.5rem;
-            }
+            .command-box code { font-size: 0.7rem; }
+            .calculator { padding: 1.5rem; }
+            .calc-row { flex-direction: column; gap: 0.5rem; align-items: stretch; }
+            .custom-select { min-width: 100%; }
         }
     </style>
 </head>
@@ -258,33 +328,51 @@
             
             <div class="calc-row">
                 <span class="calc-label">File type</span>
-                <select class="calc-select" id="fileType" onchange="calculatePrice()">
-                    <option value="image">Image</option>
-                    <option value="video">Video</option>
-                    <option value="audio">Audio</option>
-                    <option value="document">Document</option>
-                </select>
+                <div class="custom-select" data-name="fileType" data-value="image">
+                    <div class="select-trigger">
+                        <span>Image</span>
+                        <svg viewBox="0 0 16 16"><path d="M8 11L3 6h10l-5 5z"/></svg>
+                    </div>
+                    <div class="select-options">
+                        <div class="select-option selected" data-value="image">Image</div>
+                        <div class="select-option" data-value="video">Video</div>
+                        <div class="select-option" data-value="audio">Audio</div>
+                        <div class="select-option" data-value="document">Document</div>
+                    </div>
+                </div>
             </div>
             
             <div class="calc-row">
                 <span class="calc-label">File size</span>
-                <select class="calc-select" id="fileSize" onchange="calculatePrice()">
-                    <option value="1">~1 MB</option>
-                    <option value="5" selected>~5 MB</option>
-                    <option value="10">~10 MB</option>
-                    <option value="50">~50 MB</option>
-                    <option value="100">~100 MB</option>
-                </select>
+                <div class="custom-select" data-name="fileSize" data-value="5">
+                    <div class="select-trigger">
+                        <span>~5 MB</span>
+                        <svg viewBox="0 0 16 16"><path d="M8 11L3 6h10l-5 5z"/></svg>
+                    </div>
+                    <div class="select-options">
+                        <div class="select-option" data-value="1">~1 MB</div>
+                        <div class="select-option selected" data-value="5">~5 MB</div>
+                        <div class="select-option" data-value="10">~10 MB</div>
+                        <div class="select-option" data-value="50">~50 MB</div>
+                        <div class="select-option" data-value="100">~100 MB</div>
+                    </div>
+                </div>
             </div>
             
             <div class="calc-row">
                 <span class="calc-label">Output tokens</span>
-                <select class="calc-select" id="outputTokens" onchange="calculatePrice()">
-                    <option value="100">~100 (TL;DR)</option>
-                    <option value="500" selected>~500 (Summary)</option>
-                    <option value="2000">~2000 (Detailed)</option>
-                    <option value="5000">~5000 (Full)</option>
-                </select>
+                <div class="custom-select" data-name="outputTokens" data-value="500">
+                    <div class="select-trigger">
+                        <span>~500 (Summary)</span>
+                        <svg viewBox="0 0 16 16"><path d="M8 11L3 6h10l-5 5z"/></svg>
+                    </div>
+                    <div class="select-options">
+                        <div class="select-option" data-value="100">~100 (TL;DR)</div>
+                        <div class="select-option selected" data-value="500">~500 (Summary)</div>
+                        <div class="select-option" data-value="2000">~2000 (Detailed)</div>
+                        <div class="select-option" data-value="5000">~5000 (Full)</div>
+                    </div>
+                </div>
             </div>
             
             <div class="calc-divider"></div>
@@ -299,26 +387,78 @@
         
         <div class="features">
             <div class="feature">
-                <div class="feature-icon">🎯</div>
-                <div class="feature-text">Token budget control</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <span class="feature-text">Token budget control</span>
             </div>
             <div class="feature">
-                <div class="feature-icon">🔍</div>
-                <div class="feature-text">Progressive expansion</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                </div>
+                <span class="feature-text">Progressive expansion</span>
             </div>
             <div class="feature">
-                <div class="feature-icon">💳</div>
-                <div class="feature-text">Pay with crypto</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+                </div>
+                <span class="feature-text">Pay with crypto</span>
             </div>
         </div>
     </div>
     
     <footer>
-        Built by <a href="https://jesse.intelligency.pro">Jesse</a> @ <a href="https://intelligency.space">Intelligency</a>
+        Built by <a href="https://github.com/jesse-soul">Jesse</a> @ <a href="https://intelligency.space">Intelligency</a>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+        // Custom Select Logic
+        document.querySelectorAll('.custom-select').forEach(select => {
+            const trigger = select.querySelector('.select-trigger');
+            const options = select.querySelector('.select-options');
+            const optionItems = select.querySelectorAll('.select-option');
+            
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close other dropdowns
+                document.querySelectorAll('.custom-select').forEach(s => {
+                    if (s !== select) {
+                        s.querySelector('.select-trigger').classList.remove('active');
+                        s.querySelector('.select-options').classList.remove('show');
+                    }
+                });
+                trigger.classList.toggle('active');
+                options.classList.toggle('show');
+            });
+            
+            optionItems.forEach(option => {
+                option.addEventListener('click', () => {
+                    const value = option.dataset.value;
+                    const text = option.textContent;
+                    
+                    select.dataset.value = value;
+                    trigger.querySelector('span').textContent = text;
+                    
+                    optionItems.forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                    
+                    trigger.classList.remove('active');
+                    options.classList.remove('show');
+                    
+                    calculatePrice();
+                });
+            });
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select').forEach(select => {
+                select.querySelector('.select-trigger').classList.remove('active');
+                select.querySelector('.select-options').classList.remove('show');
+            });
+        });
+        
         // Pricing calculation
         const pricing = {
             image: { base: 0.002, perMB: 0.001, perToken: 0.000002 },
@@ -328,9 +468,9 @@
         };
         
         function calculatePrice() {
-            const type = document.getElementById('fileType').value;
-            const size = parseInt(document.getElementById('fileSize').value);
-            const tokens = parseInt(document.getElementById('outputTokens').value);
+            const type = document.querySelector('[data-name="fileType"]').dataset.value;
+            const size = parseInt(document.querySelector('[data-name="fileSize"]').dataset.value);
+            const tokens = parseInt(document.querySelector('[data-name="outputTokens"]').dataset.value);
             
             const p = pricing[type];
             const cost = p.base + (size * p.perMB) + (tokens * p.perToken);
@@ -338,12 +478,10 @@
             document.getElementById('price').textContent = '$' + cost.toFixed(3);
         }
         
-        // Initialize
         calculatePrice();
         
         // Three.js Particle Animation
         const container = document.getElementById('canvas-container');
-        
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -352,7 +490,6 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
         
-        // Particles
         const particlesCount = 2000;
         const positions = new Float32Array(particlesCount * 3);
         const colors = new Float32Array(particlesCount * 3);
@@ -389,40 +526,30 @@
         
         const particles = new THREE.Points(geometry, material);
         scene.add(particles);
-        
         camera.position.z = 5;
         
-        // Mouse interaction
         let mouseX = 0, mouseY = 0;
         document.addEventListener('mousemove', (e) => {
             mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
             mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
         });
         
-        // Animation
         function animate() {
             requestAnimationFrame(animate);
-            
             particles.rotation.x += 0.0003;
             particles.rotation.y += 0.0005;
-            
-            // Follow mouse gently
             particles.rotation.x += mouseY * 0.0005;
             particles.rotation.y += mouseX * 0.0005;
-            
             renderer.render(scene, camera);
         }
-        
         animate();
         
-        // Resize handler
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        // Copy command
         function copyCommand() {
             const cmd = 'curl -sSL https://any2json.ai/install | bash';
             navigator.clipboard.writeText(cmd).then(() => {
