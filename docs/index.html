@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>any2json — Media to JSON</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .tagline {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        
+        .command-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 3rem;
+        }
+        
+        .command-box:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .command-box code {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            color: #a5f3fc;
+        }
+        
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn:hover { background: rgba(255,255,255,0.2); }
+        .copy-btn.copied { background: #22c55e; }
+        
+        /* Calculator */
+        .calculator {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 3rem;
+        }
+        
+        .calc-title {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .calc-label {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
+        }
+        
+        .calc-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            min-width: 140px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+        
+        .calc-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .calc-select option {
+            background: #1a1a2e;
+            color: white;
+        }
+        
+        .calc-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            margin: 1.5rem 0;
+        }
+        
+        .calc-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .calc-result-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+        }
+        
+        .calc-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .calc-note {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .features {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .feature {
+            text-align: center;
+            opacity: 0.7;
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-text {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        footer {
+            position: fixed;
+            bottom: 2rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+            z-index: 10;
+        }
+        
+        footer a {
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+        }
+        
+        footer a:hover { color: white; }
+        
+        @media (max-width: 600px) {
+            .command-box {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            .command-box code {
+                font-size: 0.75rem;
+            }
+            .calculator {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div class="content">
+        <h1>any2json</h1>
+        <p class="tagline">Any media. Structured JSON.<br>You control the tokens.</p>
+        
+        <div class="command-box" onclick="copyCommand()">
+            <code>curl -sSL https://any2json.ai/install | bash</code>
+            <button class="copy-btn" id="copyBtn">Copy</button>
+        </div>
+        
+        <!-- Pricing Calculator -->
+        <div class="calculator">
+            <div class="calc-title">Pricing Calculator</div>
+            
+            <div class="calc-row">
+                <span class="calc-label">File type</span>
+                <select class="calc-select" id="fileType" onchange="calculatePrice()">
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                    <option value="document">Document</option>
+                </select>
+            </div>
+            
+            <div class="calc-row">
+                <span class="calc-label">File size</span>
+                <select class="calc-select" id="fileSize" onchange="calculatePrice()">
+                    <option value="1">~1 MB</option>
+                    <option value="5" selected>~5 MB</option>
+                    <option value="10">~10 MB</option>
+                    <option value="50">~50 MB</option>
+                    <option value="100">~100 MB</option>
+                </select>
+            </div>
+            
+            <div class="calc-row">
+                <span class="calc-label">Output tokens</span>
+                <select class="calc-select" id="outputTokens" onchange="calculatePrice()">
+                    <option value="100">~100 (TL;DR)</option>
+                    <option value="500" selected>~500 (Summary)</option>
+                    <option value="2000">~2000 (Detailed)</option>
+                    <option value="5000">~5000 (Full)</option>
+                </select>
+            </div>
+            
+            <div class="calc-divider"></div>
+            
+            <div class="calc-result">
+                <span class="calc-result-label">Estimated cost</span>
+                <span class="calc-price" id="price">$0.008</span>
+            </div>
+            
+            <div class="calc-note">Prices may vary. Video/audio charged per minute.</div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-text">Token budget control</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-text">Progressive expansion</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💳</div>
+                <div class="feature-text">Pay with crypto</div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        Built by <a href="https://jesse.intelligency.pro">Jesse</a> @ <a href="https://intelligency.space">Intelligency</a>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Pricing calculation
+        const pricing = {
+            image: { base: 0.002, perMB: 0.001, perToken: 0.000002 },
+            video: { base: 0.01, perMB: 0.002, perToken: 0.000003 },
+            audio: { base: 0.005, perMB: 0.001, perToken: 0.000002 },
+            document: { base: 0.003, perMB: 0.0005, perToken: 0.000001 }
+        };
+        
+        function calculatePrice() {
+            const type = document.getElementById('fileType').value;
+            const size = parseInt(document.getElementById('fileSize').value);
+            const tokens = parseInt(document.getElementById('outputTokens').value);
+            
+            const p = pricing[type];
+            const cost = p.base + (size * p.perMB) + (tokens * p.perToken);
+            
+            document.getElementById('price').textContent = '$' + cost.toFixed(3);
+        }
+        
+        // Initialize
+        calculatePrice();
+        
+        // Three.js Particle Animation
+        const container = document.getElementById('canvas-container');
+        
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+        
+        // Particles
+        const particlesCount = 2000;
+        const positions = new Float32Array(particlesCount * 3);
+        const colors = new Float32Array(particlesCount * 3);
+        
+        const colorPalette = [
+            new THREE.Color(0x667eea),
+            new THREE.Color(0x764ba2),
+            new THREE.Color(0xf093fb),
+            new THREE.Color(0x5ee7df),
+        ];
+        
+        for (let i = 0; i < particlesCount; i++) {
+            positions[i * 3] = (Math.random() - 0.5) * 20;
+            positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+            
+            const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
+        }
+        
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        const material = new THREE.PointsMaterial({
+            size: 0.05,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+        });
+        
+        const particles = new THREE.Points(geometry, material);
+        scene.add(particles);
+        
+        camera.position.z = 5;
+        
+        // Mouse interaction
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+        
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            particles.rotation.x += 0.0003;
+            particles.rotation.y += 0.0005;
+            
+            // Follow mouse gently
+            particles.rotation.x += mouseY * 0.0005;
+            particles.rotation.y += mouseX * 0.0005;
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Copy command
+        function copyCommand() {
+            const cmd = 'curl -sSL https://any2json.ai/install | bash';
+            navigator.clipboard.writeText(cmd).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
