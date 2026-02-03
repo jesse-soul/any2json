@@ -231,35 +231,124 @@ async function handleGetAddress(request, userId, env) {
 }
 
 async function handleConvert(request, userId, env) {
-  const { input, max_tokens = 500, type = 'auto' } = await request.json();
+  const { input, max_tokens = 500, type = 'auto', schema } = await request.json();
+  
+  if (!input) {
+    return jsonResponse({ error: 'Input required (URL or base64)' }, 400);
+  }
   
   // Get user for balance check
   const userData = await env.USERS.get(`user:${userId}`);
   const user = JSON.parse(userData);
   
-  // TODO: Actual conversion logic with vision API
-  // For now, mock response
+  // Determine input type
+  const isUrl = input.startsWith('http://') || input.startsWith('https://');
+  const isBase64 = input.startsWith('data:') || /^[A-Za-z0-9+/=]+$/.test(input);
   
-  const result = {
-    type: type === 'auto' ? 'image' : type,
-    summary: `Processed: ${input.substring(0, 50)}...`,
-    elements: [
-      { id: 'e1', type: 'placeholder', content: 'Vision API integration pending' }
-    ],
-    metadata: {
-      max_tokens,
-      processed_at: new Date().toISOString(),
-    },
-    _expandable: ['e1'],
-    _tokens_used: 75,
-  };
+  if (!isUrl && !isBase64) {
+    return jsonResponse({ error: 'Input must be URL or base64' }, 400);
+  }
   
-  // Update usage
-  const cost = 0.01; // $0.01 per request
-  user.used += cost;
-  await env.USERS.put(`user:${userId}`, JSON.stringify(user));
+  // Prepare image for Vision API
+  let imageContent;
+  if (isUrl) {
+    imageContent = { type: 'image_url', image_url: { url: input } };
+  } else {
+    // Handle base64
+    const base64Data = input.startsWith('data:') ? input : `data:image/jpeg;base64,${input}`;
+    imageContent = { type: 'image_url', image_url: { url: base64Data } };
+  }
   
-  return jsonResponse(result);
+  // Build prompt based on max_tokens budget
+  const detailLevel = max_tokens < 300 ? 'brief' : max_tokens < 1000 ? 'detailed' : 'comprehensive';
+  
+  const systemPrompt = `You are a vision-to-JSON converter. Extract structured data from images.
+Output ONLY valid JSON, no markdown, no explanations.
+Detail level: ${detailLevel} (budget: ~${max_tokens} tokens)
+
+${schema ? `Use this schema: ${JSON.stringify(schema)}` : `Default schema:
+{
+  "type": "image",
+  "summary": "brief description",
+  "content": {
+    "text": ["extracted text if any"],
+    "objects": ["detected objects"],
+    "scene": "scene description"
+  },
+  "metadata": {
+    "dominant_colors": ["color1", "color2"],
+    "style": "photo|illustration|screenshot|document|etc"
+  }
+}`}`;
+
+  try {
+    // Call OpenAI Vision API
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', // Cost-effective vision model
+        max_tokens: max_tokens,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Extract structured JSON from this image:' },
+              imageContent
+            ]
+          }
+        ],
+        response_format: { type: 'json_object' }
+      })
+    });
+    
+    if (!openaiResponse.ok) {
+      const error = await openaiResponse.text();
+      console.error('OpenAI error:', error);
+      return jsonResponse({ error: 'Vision API error', details: error }, 502);
+    }
+    
+    const completion = await openaiResponse.json();
+    const usage = completion.usage || {};
+    
+    // Parse the JSON response
+    let result;
+    try {
+      result = JSON.parse(completion.choices[0].message.content);
+    } catch {
+      result = { raw: completion.choices[0].message.content };
+    }
+    
+    // Calculate cost (GPT-4o-mini pricing: $0.15/1M input, $0.60/1M output)
+    const inputCost = (usage.prompt_tokens || 0) * 0.00000015;
+    const outputCost = (usage.completion_tokens || 0) * 0.0000006;
+    const totalCost = inputCost + outputCost;
+    
+    // Add our margin (50%)
+    const chargedCost = totalCost * 1.5;
+    
+    // Update usage
+    user.used += chargedCost;
+    await env.USERS.put(`user:${userId}`, JSON.stringify(user));
+    
+    return jsonResponse({
+      ...result,
+      _meta: {
+        tokens_used: usage.total_tokens || 0,
+        cost: chargedCost.toFixed(6),
+        model: 'gpt-4o-mini',
+        processed_at: new Date().toISOString(),
+      }
+    });
+    
+  } catch (err) {
+    console.error('Convert error:', err);
+    return jsonResponse({ error: 'Processing failed', details: err.message }, 500);
+  }
 }
 
 // Helpers

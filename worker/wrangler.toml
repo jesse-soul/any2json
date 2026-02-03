@@ -13,13 +13,15 @@ routes = [
 # wrangler kv:namespace create SESSIONS
 
 kv_namespaces = [
-  { binding = "USERS", id = "REPLACE_WITH_USERS_KV_ID" },
-  { binding = "ADDRESSES", id = "REPLACE_WITH_ADDRESSES_KV_ID" }
+  { binding = "USERS", id = "054b214c39b14970b997ed50f5479de0" },
+  { binding = "ADDRESSES", id = "e3e83cc418f045dfb8abe1c169c31857" }
 ]
 
 # Environment variables
 [vars]
 ENVIRONMENT = "production"
 
-# Secrets (set via wrangler secret put JWT_SECRET)
-# JWT_SECRET = "..."
+# Secrets (set via wrangler secret put <NAME>)
+# Required secrets:
+# wrangler secret put JWT_SECRET
+# wrangler secret put OPENAI_API_KEY
