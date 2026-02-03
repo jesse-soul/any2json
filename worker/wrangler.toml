@@ -1,0 +1,25 @@
+name = "any2json-api"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# Custom domain
+routes = [
+  { pattern = "api.any2json.ai/*", zone_name = "any2json.ai" }
+]
+
+# KV Namespaces - create with:
+# wrangler kv:namespace create USERS
+# wrangler kv:namespace create ADDRESSES
+# wrangler kv:namespace create SESSIONS
+
+kv_namespaces = [
+  { binding = "USERS", id = "REPLACE_WITH_USERS_KV_ID" },
+  { binding = "ADDRESSES", id = "REPLACE_WITH_ADDRESSES_KV_ID" }
+]
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets (set via wrangler secret put JWT_SECRET)
+# JWT_SECRET = "..."
