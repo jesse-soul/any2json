@@ -412,15 +412,36 @@
         
         function copyCommand() {
             const cmd = 'curl -sSL https://any2json.ai/install | bash';
-            navigator.clipboard.writeText(cmd).then(() => {
-                const btn = document.getElementById('copyBtn');
-                btn.textContent = 'Copied!';
-                btn.classList.add('copied');
-                setTimeout(() => {
-                    btn.textContent = 'Copy';
-                    btn.classList.remove('copied');
-                }, 2000);
-            });
+            const btn = document.getElementById('copyBtn');
+            
+            // Try modern API first, fallback to execCommand
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(cmd).then(() => showCopied(btn));
+            } else {
+                // Fallback for non-HTTPS
+                const textarea = document.createElement('textarea');
+                textarea.value = cmd;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showCopied(btn);
+                } catch (e) {
+                    btn.textContent = 'Select & Ctrl+C';
+                }
+                document.body.removeChild(textarea);
+            }
+        }
+        
+        function showCopied(btn) {
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = 'Copy';
+                btn.classList.remove('copied');
+            }, 2000);
         }
     </script>
 </body>
