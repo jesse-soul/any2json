@@ -96,6 +96,11 @@
         .copy-btn:hover { background: rgba(255,255,255,0.2); }
         .copy-btn.copied { background: #22c55e; }
         
+        .try-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+        
         /* Calculator */
         .calculator {
             background: rgba(255,255,255,0.03);
@@ -317,9 +322,15 @@
         <h1>any2json</h1>
         <p class="tagline">Any media. Structured JSON.<br>You control the tokens.</p>
         
-        <div class="command-box" onclick="copyCommand()">
-            <code>curl -sSL https://any2json.ai/install | bash</code>
-            <button class="copy-btn" id="copyBtn">Copy</button>
+        <div class="cta-buttons" style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center;">
+            <a href="/demo.html" class="try-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 12px; padding: 1rem 2rem; color: white; font-weight: 600; text-decoration: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Try Live Demo
+            </a>
+            <div class="command-box" onclick="copyCommand()" style="margin-bottom: 0;">
+                <code>curl -sSL any2json.ai/install | bash</code>
+                <button class="copy-btn" id="copyBtn">Copy</button>
+            </div>
         </div>
         
         <!-- Pricing Calculator -->

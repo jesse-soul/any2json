@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>any2json — Try It Live</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        
+        .back-link {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: white; }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 2rem;
+        }
+        
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed rgba(102, 126, 234, 0.4);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+        
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.01);
+        }
+        
+        .drop-zone.processing {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+        
+        .drop-zone-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            stroke: #667eea;
+            fill: none;
+            stroke-width: 1.5;
+        }
+        
+        .drop-zone-text {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 0.5rem;
+        }
+        
+        .drop-zone-hint {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .drop-zone input[type="file"] {
+            display: none;
+        }
+        
+        /* Gallery Section */
+        .gallery-section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .hint-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            color: #a5b4fc;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .hint-badge svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+        }
+        
+        /* Sample Cards Grid */
+        .samples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        
+        .sample-card {
+            position: relative;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: grab;
+            transition: all 0.3s ease;
+            aspect-ratio: 3/4;
+        }
+        
+        .sample-card:hover {
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
+        }
+        
+        .sample-card:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+        
+        .sample-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        .sample-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%) contrast(0.95);
+            transition: filter 0.3s;
+        }
+        
+        .sample-card:hover .sample-thumb {
+            filter: none;
+        }
+        
+        .sample-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(transparent 50%, rgba(0,0,0,0.8));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1rem;
+        }
+        
+        .sample-type {
+            font-size: 0.7rem;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+        
+        .sample-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: white;
+        }
+        
+        .sample-actions {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .sample-card:hover .sample-actions {
+            opacity: 1;
+        }
+        
+        .sample-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .sample-btn:hover {
+            background: rgba(102, 126, 234, 0.8);
+        }
+        
+        .sample-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2;
+        }
+        
+        /* Results Panel */
+        .results-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .results-panel.active {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .results-title {
+            font-weight: 600;
+        }
+        
+        .results-meta {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .meta-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+        }
+        
+        .meta-item.time { color: #22c55e; }
+        .meta-item.cost { color: #f59e0b; }
+        .meta-item.tokens { color: #a5b4fc; }
+        
+        .results-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: rgba(255,255,255,0.08);
+        }
+        
+        @media (max-width: 768px) {
+            .results-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .result-pane {
+            background: #0a0a0f;
+            padding: 1.5rem;
+        }
+        
+        .pane-title {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+        
+        .source-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        
+        .json-output {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow: auto;
+            color: #e2e8f0;
+        }
+        
+        .json-key { color: #a5b4fc; }
+        .json-string { color: #86efac; }
+        .json-number { color: #fbbf24; }
+        .json-boolean { color: #f472b6; }
+        
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .lightbox.active {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .lightbox-close:hover { opacity: 1; }
+        
+        .lightbox-caption {
+            text-align: center;
+            margin-top: 1rem;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .lightbox-use-btn {
+            margin-top: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .lightbox-use-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Category tabs */
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .category-tab {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .category-tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .category-tab.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.5);
+            color: #a5b4fc;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+        }
+        
+        footer a {
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="logo">any2json</a>
+            <a href="/" class="back-link">← Back to home</a>
+        </header>
+        
+        <h1>Try It Live</h1>
+        <p class="subtitle">Upload any document or drag a sample below to see instant JSON extraction</p>
+        
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="dropZone">
+            <svg class="drop-zone-icon" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="drop-zone-text">Drop file here or click to upload</div>
+            <div class="drop-zone-hint">Supports images, PDFs, and scanned documents</div>
+            <input type="file" id="fileInput" accept="image/*,.pdf">
+        </div>
+        
+        <!-- Results Panel -->
+        <div class="results-panel" id="resultsPanel">
+            <div class="results-header">
+                <span class="results-title">Extraction Result</span>
+                <div class="results-meta">
+                    <div class="meta-item time">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span id="resultTime">1.2s</span>
+                    </div>
+                    <div class="meta-item cost">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        <span id="resultCost">$0.003</span>
+                    </div>
+                    <div class="meta-item tokens">
+                        <svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+                        <span id="resultTokens">342 tokens</span>
+                    </div>
+                </div>
+            </div>
+            <div class="results-content">
+                <div class="result-pane">
+                    <div class="pane-title">Source Document</div>
+                    <img class="source-preview" id="sourcePreview" src="" alt="Source">
+                </div>
+                <div class="result-pane">
+                    <div class="pane-title">Extracted JSON</div>
+                    <pre class="json-output" id="jsonOutput"></pre>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sample Documents Gallery -->
+        <div class="gallery-section">
+            <div class="section-header">
+                <span class="section-title">Sample Documents</span>
+                <div class="hint-badge">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Click to preview • Drag to upload
+                </div>
+            </div>
+            
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="all">All</button>
+                <button class="category-tab" data-category="logistics">Logistics</button>
+                <button class="category-tab" data-category="finance">Finance</button>
+                <button class="category-tab" data-category="identity">Identity</button>
+                <button class="category-tab" data-category="forms">Forms</button>
+            </div>
+            
+            <div class="samples-grid" id="samplesGrid">
+                <!-- Sample cards will be inserted here by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+            <button class="lightbox-close" onclick="closeLightbox()">×</button>
+            <img class="lightbox-image" id="lightboxImage" src="" alt="Preview">
+            <div class="lightbox-caption" id="lightboxCaption"></div>
+            <center>
+                <button class="lightbox-use-btn" id="lightboxUseBtn">Use this document</button>
+            </center>
+        </div>
+    </div>
+    
+    <footer>
+        Built by <a href="https://github.com/jesse-soul">Jesse</a> @ <a href="https://intelligency.space">Intelligency</a>
+    </footer>
+
+    <script>
+        // Sample documents data
+        const samples = [
+            { id: 'bl-1', name: 'Bill of Lading', type: 'logistics', category: 'logistics', 
+              thumb: 'samples/bill-of-lading-thumb.jpg', full: 'samples/bill-of-lading.jpg' },
+            { id: 'cmr-1', name: 'CMR Waybill', type: 'logistics', category: 'logistics',
+              thumb: 'samples/cmr-thumb.jpg', full: 'samples/cmr.jpg' },
+            { id: 'invoice-1', name: 'Commercial Invoice', type: 'finance', category: 'finance',
+              thumb: 'samples/invoice-thumb.jpg', full: 'samples/invoice.jpg' },
+            { id: 'packing-1', name: 'Packing List', type: 'logistics', category: 'logistics',
+              thumb: 'samples/packing-list-thumb.jpg', full: 'samples/packing-list.jpg' },
+            { id: 'passport-1', name: 'Passport', type: 'identity', category: 'identity',
+              thumb: 'samples/passport-thumb.jpg', full: 'samples/passport.jpg' },
+            { id: 'receipt-1', name: 'Receipt', type: 'finance', category: 'finance',
+              thumb: 'samples/receipt-thumb.jpg', full: 'samples/receipt.jpg' },
+            { id: 'customs-1', name: 'Customs Declaration', type: 'logistics', category: 'logistics',
+              thumb: 'samples/customs-thumb.jpg', full: 'samples/customs.jpg' },
+            { id: 'form-1', name: 'Application Form', type: 'forms', category: 'forms',
+              thumb: 'samples/form-thumb.jpg', full: 'samples/form.jpg' },
+        ];
+        
+        // Mock JSON results for demo
+        const mockResults = {
+            'bl-1': {
+                document_type: "Bill of Lading",
+                bl_number: "MSKU7234892",
+                shipper: { name: "Shanghai Export Co., Ltd", address: "1234 Harbor Road, Shanghai, China" },
+                consignee: { name: "Rotterdam Import BV", address: "Europaweg 123, Rotterdam, NL" },
+                vessel: "MSC AURORA",
+                voyage: "024W",
+                port_of_loading: "CNSHA",
+                port_of_discharge: "NLRTM",
+                containers: [
+                    { number: "MSKU1234567", size: "40HC", weight_kg: 24500, seal: "ML789456" }
+                ],
+                goods_description: "Electronics components, 450 cartons",
+                freight_terms: "PREPAID"
+            },
+            'cmr-1': {
+                document_type: "CMR Consignment Note",
+                cmr_number: "DE-2024-78543",
+                sender: { name: "AutoParts GmbH", address: "Industriestr. 45, Munich, DE" },
+                carrier: { name: "TransEurope Logistics", vehicle: "M-TR 4521" },
+                consignee: { name: "Garage Milano SRL", address: "Via Roma 78, Milan, IT" },
+                goods: { description: "Automotive spare parts", packages: 24, weight_kg: 1850 },
+                loading_date: "2024-01-15",
+                delivery_date: "2024-01-17"
+            },
+            'invoice-1': {
+                document_type: "Commercial Invoice",
+                invoice_number: "INV-2024-0892",
+                date: "2024-01-20",
+                seller: { name: "TechSupply Inc.", address: "500 Innovation Dr, San Jose, CA" },
+                buyer: { name: "EuroTech GmbH", address: "Technikstr. 12, Berlin, DE" },
+                items: [
+                    { description: "Microcontroller MCU-X500", qty: 1000, unit_price: 4.50, total: 4500.00 },
+                    { description: "Sensor Module SM-200", qty: 500, unit_price: 12.00, total: 6000.00 }
+                ],
+                subtotal: 10500.00,
+                currency: "USD",
+                payment_terms: "Net 30"
+            },
+            'default': {
+                document_type: "Unknown",
+                extracted_text: "Document content will appear here...",
+                confidence: 0.85
+            }
+        };
+        
+        // Render sample cards
+        function renderSamples(category = 'all') {
+            const grid = document.getElementById('samplesGrid');
+            const filtered = category === 'all' ? samples : samples.filter(s => s.category === category);
+            
+            grid.innerHTML = filtered.map(sample => `
+                <div class="sample-card" draggable="true" data-id="${sample.id}" 
+                     ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
+                    <img class="sample-thumb" src="${sample.thumb}" alt="${sample.name}"
+                         onerror="this.src='https://via.placeholder.com/180x240/1a1a2e/667eea?text=${encodeURIComponent(sample.name)}'">
+                    <div class="sample-overlay">
+                        <div class="sample-type">${sample.type}</div>
+                        <div class="sample-name">${sample.name}</div>
+                    </div>
+                    <div class="sample-actions">
+                        <button class="sample-btn" onclick="openLightbox('${sample.id}')" title="Preview">
+                            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <button class="sample-btn" onclick="processSample('${sample.id}')" title="Process">
+                            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Category tabs
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderSamples(tab.dataset.category);
+            });
+        });
+        
+        // Drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const sampleId = e.dataTransfer.getData('sampleId');
+            if (sampleId) {
+                processSample(sampleId);
+            } else if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('sampleId', e.target.dataset.id);
+            e.dataTransfer.effectAllowed = 'copy';
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        // Lightbox
+        let currentSampleId = null;
+        
+        function openLightbox(sampleId) {
+            const sample = samples.find(s => s.id === sampleId);
+            if (!sample) return;
+            
+            currentSampleId = sampleId;
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImage');
+            const caption = document.getElementById('lightboxCaption');
+            
+            img.src = sample.full;
+            img.onerror = () => {
+                img.src = `https://via.placeholder.com/600x800/1a1a2e/667eea?text=${encodeURIComponent(sample.name)}`;
+            };
+            caption.textContent = `${sample.name} (${sample.type})`;
+            lightbox.classList.add('active');
+        }
+        
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+        
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target.id === 'lightbox') closeLightbox();
+        });
+        
+        document.getElementById('lightboxUseBtn').addEventListener('click', () => {
+            if (currentSampleId) {
+                closeLightbox();
+                processSample(currentSampleId);
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+        
+        // Process sample document
+        async function processSample(sampleId) {
+            const sample = samples.find(s => s.id === sampleId);
+            if (!sample) return;
+            
+            showProcessing();
+            
+            // Simulate API call
+            const startTime = Date.now();
+            await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+            
+            const result = mockResults[sampleId] || mockResults['default'];
+            const tokens = JSON.stringify(result).length;
+            const cost = (tokens * 0.000008).toFixed(4);
+            
+            showResult(sample.full, result, elapsed, cost, tokens);
+        }
+        
+        // Handle uploaded file
+        async function handleFile(file) {
+            if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+                alert('Please upload an image or PDF file');
+                return;
+            }
+            
+            showProcessing();
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const startTime = Date.now();
+                
+                // TODO: Real API call
+                // const formData = new FormData();
+                // formData.append('file', file);
+                // const response = await fetch('https://api.any2json.ai/api/convert', {
+                //     method: 'POST',
+                //     body: formData
+                // });
+                
+                await new Promise(r => setTimeout(r, 1000 + Math.random() * 1500));
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                
+                const mockResult = {
+                    document_type: "Uploaded Document",
+                    filename: file.name,
+                    file_size: `${(file.size / 1024).toFixed(1)} KB`,
+                    extracted_fields: {
+                        note: "Real extraction requires API connection",
+                        demo_mode: true
+                    }
+                };
+                
+                const tokens = JSON.stringify(mockResult).length;
+                const cost = (tokens * 0.000008).toFixed(4);
+                
+                showResult(e.target.result, mockResult, elapsed, cost, tokens);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function showProcessing() {
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.add('processing');
+            dropZone.innerHTML = `
+                <div class="spinner"></div>
+                <div class="drop-zone-text">Processing document...</div>
+                <div class="drop-zone-hint">Extracting structured data</div>
+            `;
+        }
+        
+        function resetDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.remove('processing');
+            dropZone.innerHTML = `
+                <svg class="drop-zone-icon" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <div class="drop-zone-text">Drop file here or click to upload</div>
+                <div class="drop-zone-hint">Supports images, PDFs, and scanned documents</div>
+                <input type="file" id="fileInput" accept="image/*,.pdf">
+            `;
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                if (e.target.files.length) handleFile(e.target.files[0]);
+            });
+        }
+        
+        function showResult(imageSrc, json, time, cost, tokens) {
+            resetDropZone();
+            
+            const panel = document.getElementById('resultsPanel');
+            const preview = document.getElementById('sourcePreview');
+            const output = document.getElementById('jsonOutput');
+            
+            preview.src = imageSrc;
+            preview.onerror = () => {
+                preview.src = 'https://via.placeholder.com/400x300/1a1a2e/667eea?text=Document+Preview';
+            };
+            
+            document.getElementById('resultTime').textContent = `${time}s`;
+            document.getElementById('resultCost').textContent = `$${cost}`;
+            document.getElementById('resultTokens').textContent = `${tokens} tokens`;
+            
+            output.innerHTML = syntaxHighlight(JSON.stringify(json, null, 2));
+            
+            panel.classList.add('active');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        function syntaxHighlight(json) {
+            return json
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+                    match => {
+                        let cls = 'json-number';
+                        if (/^"/.test(match)) {
+                            cls = /:$/.test(match) ? 'json-key' : 'json-string';
+                        } else if (/true|false/.test(match)) {
+                            cls = 'json-boolean';
+                        }
+                        return `<span class="${cls}">${match}</span>`;
+                    });
+        }
+        
+        // Initial render
+        renderSamples();
+    </script>
+</body>
+</html>
