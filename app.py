@@ -1,6 +1,6 @@
 """
 any2json — Multimodal to JSON converter
-MVP: Image support with token budget control
+MVP: Image and Audio support with token budget control
 """
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
@@ -11,6 +11,9 @@ from typing import Optional, List
 import base64
 import httpx
 import os
+
+# Import audio backend
+from backend.audio import process_audio_url, process_audio_base64
 
 app = FastAPI(
     title="any2json",
@@ -26,6 +29,7 @@ class ConvertRequest(BaseModel):
     max_tokens: int = 500
     format: str = "flat"  # flat|nested|progressive
     expand: Optional[List[str]] = None
+    language: Optional[str] = None  # Language hint for audio (e.g., "Russian", "English")
 
 
 class ConvertResponse(BaseModel):
@@ -84,6 +88,20 @@ async def process_image(image_data: str, max_tokens: int) -> dict:
         "_expandable": ["e1"],
         "_tokens_used": 45
     }
+
+
+async def process_audio(audio_input: str, max_tokens: int, language: Optional[str] = None) -> dict:
+    """Process audio file (URL or base64)."""
+    
+    try:
+        # Detect if URL or base64
+        if audio_input.startswith("http://") or audio_input.startswith("https://"):
+            return process_audio_url(audio_input, max_tokens, language)
+        else:
+            return process_audio_base64(audio_input, max_tokens, language)
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Audio processing error: {str(e)}")
 
 
 # --- Routes ---
@@ -190,7 +208,7 @@ async def landing():
         
         <div class="feature">
             <h3>📷 Supported Formats</h3>
-            <p>Images (JPG, PNG, WebP) • <span style="opacity:0.5">Video, Audio, Documents — coming soon</span></p>
+            <p><strong>Images</strong> (JPG, PNG, WebP) • <strong>Audio</strong> (MP3, WAV, M4A, OGG) • <span style="opacity:0.5">Video, Documents — coming soon</span></p>
         </div>
         
         <div class="feature coming-soon">
@@ -213,15 +231,23 @@ async def convert(request: ConvertRequest):
     
     if request.type == "auto":
         # TODO: Auto-detect type from input
-        request.type = "image"
+        # For now, check if URL ends with audio extensions
+        if any(request.input.lower().endswith(ext) for ext in ['.mp3', '.wav', '.m4a', '.ogg', '.flac', '.aac']):
+            request.type = "audio"
+        else:
+            request.type = "image"
     
     if request.type == "image":
         result = await process_image(request.input, request.max_tokens)
         return JSONResponse(result)
     
+    if request.type == "audio":
+        result = await process_audio(request.input, request.max_tokens, request.language)
+        return JSONResponse(result)
+    
     raise HTTPException(
         status_code=400,
-        detail=f"Type '{request.type}' not yet supported. MVP supports: image"
+        detail=f"Type '{request.type}' not yet supported. Supported: image, audio"
     )
 
 
